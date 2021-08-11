@@ -167,14 +167,14 @@ class SQuAD:
             examples=examples,
             features=features,
             predictions=predictions,
-            version_2_with_negative=False,
+            version_2_with_negative=True,
             n_best_size=20,
             max_answer_length=30,
             null_score_diff_threshold=0.0,
             output_dir='output',
             prefix=stage,
         )
-        if False: # squad_v2
+        if True: # squad_v2
             formatted_predictions = [
                 {"id": k, "prediction_text": v, "no_answer_probability": 0.0} for k, v in predictions.items()
             ]
