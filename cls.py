@@ -13,6 +13,7 @@ from tqdm import tqdm
 import argparse
 import os
 import sys
+import json
 
 from data.squad_dataset import SQuAD
 
@@ -292,7 +293,8 @@ class Train_API():
             if eval_f1 > best_dev_result:
                 best_dev_result = eval_f1
                 best_result = result
-            pbar.set_description(f'Train_loss: {total_loss:.1f}, Eval_F1: {eval_f1:.3f}')
+            pbar.set_description(f'Train_loss: {total_loss:.0f}, Eval_F1: {eval_f1:.2f}')
+        self.predict()
         return best_result
 
     def evaluate(self, pbar: tqdm):
@@ -312,9 +314,25 @@ class Train_API():
         metrics = self.compute_metric(eval_preds)
         for key in list(metrics.keys()):
                 if not key.startswith(f"eval_"):
-                    metrics[f"eval_{key}"] = metrics.pop(key)
-        
+                    metrics[f"eval_{key}"] = metrics.pop(key)        
         return metrics
+
+    def predict(self):
+        self.model.eval()
+        with torch.no_grad():
+            start, end = [],[]
+            for batch_idx, batch in enumerate(self.eval_loader):
+                batch = {k:v.to(self.device) for k,v in batch.items()}
+                output = self.model(**batch)
+                start_logits, end_logits = output.start_logits, output.end_logits
+                start.append(start_logits)
+                end.append(end_logits)
+            start_logits = np.array(torch.cat(start).cpu())
+            end_logits = np.array(torch.cat(end).cpu())
+        preds = self.post_process_function(self.eval_example, self.eval_dataset, (start_logits, end_logits))
+        out_file = open('output/prediction.json', 'w')
+        predictions = dict((p["id"], p["prediction_text"]) for p in preds[0])
+        json.dump(predictions, out_file)
 
 
 def construct_args():

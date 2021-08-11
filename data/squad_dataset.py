@@ -12,7 +12,7 @@ from utils_qa import postprocess_qa_predictions
 class SQuAD:
 
     def __init__(self, tokenizer: AutoTokenizer, batch_size: int) -> None:
-        raw_datasets = load_dataset('squad')
+        raw_datasets = load_dataset('data/load_dataset.py')
         column_names = raw_datasets['train'].column_names
         self.question_column_name = "question"
         self.context_column_name = "context"

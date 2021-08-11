@@ -5,3 +5,4 @@ checkpoints/
 experiment.py
 *.txt
 *.lock
+*.json

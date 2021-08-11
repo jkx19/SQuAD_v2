@@ -8,13 +8,11 @@ that a question is unanswerable.
 import argparse
 import collections
 import json
+import numpy as np
 import os
 import re
 import string
 import sys
-
-import numpy as np
-
 
 OPTS = None
 
@@ -63,7 +61,7 @@ def make_qid_to_has_ans(dataset):
     for article in dataset:
         for p in article["paragraphs"]:
             for qa in p["qas"]:
-                qid_to_has_ans[qa["id"]] = bool(qa["answers"]["text"])
+                qid_to_has_ans[qa["id"]] = bool(qa["answers"])
     return qid_to_has_ans
 
 
@@ -120,7 +118,9 @@ def get_raw_scores(dataset, preds):
         for p in article["paragraphs"]:
             for qa in p["qas"]:
                 qid = qa["id"]
-                gold_answers = [t for t in qa["answers"]["text"] if normalize_answer(t)]
+                gold_answers = [
+                    a["text"] for a in qa["answers"] if normalize_answer(a["text"])
+                ]
                 if not gold_answers:
                     # For unanswerable questions, only correct answer is empty string
                     gold_answers = [""]
