@@ -51,6 +51,11 @@ class SQuAD:
         self.metric = load_metric('data/metric.py')
 
     def prepare_train_dataset(self, examples):
+        # Some of the questions have lots of whitespace on the left, which is not useful and will make the
+        # truncation of the context fail (the tokenized question will take a lots of space). So we remove that
+        # left whitespace
+        examples['question'] = [q.lstrip() for q in examples['question']]
+        
         tokenized = self.tokenizer(
             examples['question' if self.pad_on_right else 'context'],
             examples['context' if self.pad_on_right else 'question'],
@@ -108,6 +113,11 @@ class SQuAD:
         return tokenized
 
     def prepare_eval_dataset(self, examples):
+        # Some of the questions have lots of whitespace on the left, which is not useful and will make the
+        # truncation of the context fail (the tokenized question will take a lots of space). So we remove that
+        # left whitespace
+        examples['question'] = [q.lstrip() for q in examples['question']]
+
         tokenized = self.tokenizer(
             examples['question' if self.pad_on_right else 'context'],
             examples['context' if self.pad_on_right else 'question'],

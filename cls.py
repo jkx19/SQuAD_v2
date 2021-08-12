@@ -6,6 +6,7 @@ from model.prefix import DebertaPrefixModel
 from transformers import AutoTokenizer, AutoConfig, DebertaForQuestionAnswering
 from transformers.models.bert.configuration_bert import BertConfig
 from transformers.trainer_pt_utils import get_parameter_names
+from transformers.trainer_utils import set_seed
 import torch
 from torch.optim import AdamW
 
@@ -337,22 +338,25 @@ class Train_API():
 
 def construct_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--lr', type=float, default=5e-2)
+    parser.add_argument('--lr', type=float, default=2e-2)
     parser.add_argument('--gamma', type=float, default=0.95)
-    parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--batch_size', type=int, default=8)
     parser.add_argument('--pre_seq_len', type=int, default=8)
     parser.add_argument('--mid_dim', type=int, default=512)
-    parser.add_argument('--model', type=str, choices=['bert', 'deberta'], default='bert')
+    parser.add_argument('--model', type=str, choices=['bert', 'deberta'], default='deberta')
     parser.add_argument('--model_size', type=str, choices=['base', 'large'], default='base')
     parser.add_argument('--method', type=str, choices=['finetune', 'prefix'], default='prefix')
     parser.add_argument('--epoch', type=int, default=10)
-    parser.add_argument('--dropout', type=float, default=0.3)
+    parser.add_argument('--dropout', type=float, default=0.2)
+    parser.add_argument('--cuda', type=str, default='5')
+    parser.add_argument('--seed', type=int, default=44)
     args = parser.parse_args()
     return args
 
 if __name__ == '__main__':
     args = construct_args()
-    os.environ["CUDA_VISIBLE_DEVICES"] = "5"      
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda
+    set_seed(args.seed)
     train_api = Train_API(args)
     result = train_api.train()
     sys.stdout = open('result.txt', 'a')
