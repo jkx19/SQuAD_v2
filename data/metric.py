@@ -14,6 +14,7 @@
 # limitations under the License.
 """ SQuAD v2 metric. """
 
+import json
 import datasets
 
 from .evaluate import (
@@ -114,7 +115,10 @@ class SquadV2(datasets.Metric):
 
     def _compute(self, predictions, references, no_answer_threshold=1.0):
         no_answer_probabilities = dict((p["id"], p["no_answer_probability"]) for p in predictions)
-        dataset = [{"paragraphs": [{"qas": references}]}]
+        # dataset = [{"paragraphs": [{"qas": references}]}]
+        eval_dataset = open('data/dev-v2.0.json', 'r')
+        dataset_json = json.load(eval_dataset)
+        dataset = dataset_json['data']
         predictions = dict((p["id"], p["prediction_text"]) for p in predictions)
 
         qid_to_has_ans = make_qid_to_has_ans(dataset)  # maps qid to True/False

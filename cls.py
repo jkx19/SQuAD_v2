@@ -232,6 +232,7 @@ class Train_API():
         self.weight_decay = 0
         self.gamma = args.gamma
         self.lr = args.lr
+        self.seed = args.seed
 
         self.compute_metric = dataset.compute_metric
         self.post_process_function = dataset.post_process_function
@@ -271,6 +272,7 @@ class Train_API():
 
         best_dev_result = 0
         best_result = None
+        best_model = None
         for epoch in range(self.epoch):
             # Train
             total_loss = 0
@@ -294,8 +296,9 @@ class Train_API():
             if eval_f1 > best_dev_result:
                 best_dev_result = eval_f1
                 best_result = result
+                best_model = self.model.prefix_encoder
             pbar.set_description(f'Train_loss: {total_loss:.0f}, Eval_F1: {eval_f1:.2f}')
-        self.predict()
+        torch.save(best_model, f'checkpoints/prefix_{self.seed}_{eval_f1}_{self.model_name}')
         return best_result
 
     def evaluate(self, pbar: tqdm):

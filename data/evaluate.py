@@ -340,9 +340,9 @@ def main():
 
 if __name__ == "__main__":
     OPTS = parse_args()
-    # if OPTS.out_image_dir:
-    #     import matplotlib
+    if OPTS.out_image_dir:
+        import matplotlib
 
-    #     matplotlib.use("Agg")
-    #     import matplotlib.pyplot as plt
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
     main()
