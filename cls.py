@@ -2,9 +2,8 @@ from dataclasses import dataclass, field
 from typing import Optional
 import numpy as np
 from model.prefix import BertForQuestionAnswering, BertPrefixModel
-from model.prefix import DebertaPrefixModel
+from model.prefix import DebertaPrefixModel, RobertaPrefixModel
 from transformers import AutoTokenizer, AutoConfig, DebertaForQuestionAnswering
-from transformers.models.bert.configuration_bert import BertConfig
 from transformers.trainer_pt_utils import get_parameter_names
 from transformers.trainer_utils import set_seed
 import torch
@@ -171,6 +170,8 @@ class Train_API():
         self.batch_size = args.batch_size
         if args.model == 'bert':
             self.model_name = f'bert-{args.model_size}-uncased'
+        if args.model == 'roberta':
+            self.model_name = f'roberta-{args.model_size}'
         elif args.model == 'deberta':
             self.model_name = 'microsoft/deberta-xlarge'
 
@@ -214,6 +215,15 @@ class Train_API():
                     config=config,
                     revision='main',
                 )
+        elif args.model == 'roberta':
+            if method == 'prefix':
+                self.model = RobertaPrefixModel.from_pretrained(
+                    self.model_name,
+                    config=config,
+                    revision='main',
+                )
+            else:
+                raise NotImplementedError
 
         dataset = SQuAD(tokenizer, self.batch_size)
 
@@ -236,7 +246,6 @@ class Train_API():
 
         self.compute_metric = dataset.compute_metric
         self.post_process_function = dataset.post_process_function
-
 
     def get_optimizer(self):
         decay_parameters = get_parameter_names(self.model, [torch.nn.LayerNorm])
@@ -296,9 +305,8 @@ class Train_API():
             if eval_f1 > best_dev_result:
                 best_dev_result = eval_f1
                 best_result = result
-                best_model = self.model.prefix_encoder
+                torch.save(self.model, f'checkpoints/model_{self.seed}.pt')
             pbar.set_description(f'Train_loss: {total_loss:.0f}, Eval_F1: {eval_f1:.2f}')
-        torch.save(best_model, f'checkpoints/prefix_{self.seed}_{eval_f1}_{self.model_name}')
         return best_result
 
     def evaluate(self, pbar: tqdm):
@@ -341,18 +349,18 @@ class Train_API():
 
 def construct_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--lr', type=float, default=2e-2)
+    parser.add_argument('--lr', type=float, default=5e-3)
     parser.add_argument('--gamma', type=float, default=0.95)
     parser.add_argument('--batch_size', type=int, default=8)
     parser.add_argument('--pre_seq_len', type=int, default=8)
     parser.add_argument('--mid_dim', type=int, default=512)
-    parser.add_argument('--model', type=str, choices=['bert', 'deberta'], default='deberta')
+    parser.add_argument('--model', type=str, choices=['bert', 'roberta', 'deberta'], default='deberta')
     parser.add_argument('--model_size', type=str, choices=['base', 'large'], default='base')
     parser.add_argument('--method', type=str, choices=['finetune', 'prefix'], default='prefix')
     parser.add_argument('--epoch', type=int, default=10)
     parser.add_argument('--dropout', type=float, default=0.2)
     parser.add_argument('--cuda', type=str, default='5')
-    parser.add_argument('--seed', type=int, default=44)
+    parser.add_argument('--seed', type=int, default=11)
     args = parser.parse_args()
     return args
 
